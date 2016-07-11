@@ -1,0 +1,3 @@
+python doit.py
+echo "COMMAND COMPLETE."
+mail ...
