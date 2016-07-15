@@ -18,7 +18,9 @@ def get_directory_content(target, flag=""):
     return stdout
 
 
-def change_directory(target):
+def change_directory(target, root=""):
+    if root:
+        target = os.path.join(roots['src'], codebase)
     stdout, stderr = server.run_command("cd " + target)
     if stderr:
         raise SystemExit("Cannot change to directory %s:\n %s" % (target, stderr))
@@ -32,19 +34,21 @@ def clone_codebase(codebase):
     print(stdout)
 
 
-def clean_codebase(codebase):
+def clean_codebase(codebase, root=""):
+    if root:
+        codebase = os.path.join(roots['src'], codebase)
     stdout, stderr = server.run_command("rm -rf " + codebase)
     if stderr:
         raise SystemExit("Cannot remove %s:\n %s" % (codebase, stderr))
     print('removed directory: %s' % codebase)
 
 
-def update_codebase(codebase):
+def update_codebase(codebase, root=""):
     stdout, stderr = server.run_command("git pull")
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (codebase, stderr))
-    if 'CONFLICT' in stdout:
-        clean_codebase(codebase)
+    if 'CONFLICT' in stdout or 'error' in stdout:
+        clean_codebase(codebase, root=root)
         clone_codebase(codebase)
 
 
@@ -61,8 +65,8 @@ for codebase in codes.keys():
         clone_codebase(codebase)
         change_directory('-')
     else:
-        change_directory(os.path.join(roots['src'], codebase))
-        update_codebase(codebase)
+        change_directory(codebase, root=roots['src'])
+        update_codebase(codebase, root=roots['src'])
         change_directory('-')
 
 # TODO: Test on Data
