@@ -45,6 +45,7 @@ def clean_codebase(codebase, root=""):
 
 def update_codebase(codebase, root=""):
     stdout, stderr = server.run_command("git pull")
+    print(stdout, stderr)
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (codebase, stderr))
     if 'CONFLICT' in stdout or 'error' in stdout:
@@ -68,6 +69,8 @@ for codebase in codes.keys():
         change_directory(codebase, root=roots['src'])
         update_codebase(codebase, root=roots['src'])
         change_directory('-')
+
+print("don't know why")
 
 # TODO: Test on Data
 # TODO:
