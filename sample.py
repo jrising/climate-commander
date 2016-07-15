@@ -36,6 +36,7 @@ def clone_codebase(codebase):
 
 def clean_codebase(codebase, root=""):
     if root:
+        change_directory(root)
         codebase = os.path.join(roots['src'], codebase)
     stdout, stderr = server.run_command("rm -rf " + codebase)
     if stderr:
@@ -48,7 +49,7 @@ def update_codebase(codebase, root=""):
     print(stdout, stderr)
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (codebase, stderr))
-    if 'CONFLICT' in stdout or 'error' in stdout:
+    if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout:
         clean_codebase(codebase, root=root)
         clone_codebase(codebase)
 
@@ -69,8 +70,6 @@ for codebase in codes.keys():
         change_directory(codebase, root=roots['src'])
         update_codebase(codebase, root=roots['src'])
         change_directory('-')
-
-print("don't know why")
 
 # TODO: Test on Data
 # TODO:
