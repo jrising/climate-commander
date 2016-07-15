@@ -37,14 +37,16 @@ def clean_codebase(codebase):
     if stderr:
         raise SystemExit("Cannot remove %s:\n %s" % (codebase, stderr))
     print('removed directory: %s' % codebase)
-    clone_codebase(codebase)
 
 
 def update_codebase(codebase):
     stdout, stderr = server.run_command("git pull")
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (codebase, stderr))
-    print(stdout)
+    if stdout:
+        clean_codebase(codebase)
+        clone_codebase(codebase)
+
 
 # Mission of this code:
 # Check if target codebase is in the '~/src' directory
