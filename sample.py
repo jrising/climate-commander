@@ -43,7 +43,7 @@ def update_codebase(codebase):
     stdout, stderr = server.run_command("git pull")
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (codebase, stderr))
-    if stdout:
+    if 'CONFLICT' in stdout:
         clean_codebase(codebase)
         clone_codebase(codebase)
 
