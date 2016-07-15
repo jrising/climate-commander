@@ -69,7 +69,7 @@ for codebase in codes.keys():
     else:
         change_directory(codebase, root=roots['src'])
         update_codebase(codebase, root=roots['src'])
-        change_directory('-')
+        change_directory('~')
 
 # TODO: Test on Data
 # TODO:
