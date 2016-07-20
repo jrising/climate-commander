@@ -5,4 +5,4 @@ roots = {'data': '~/data', 'src': '~/src'}
 
 server = login_server.LoginServer(('berkeley', 'shackleton'), 20, roots, credentials)
 server.connect()
-server.start_process('python testTask.py')
+server.run_command('python testTask.py')
