@@ -1,0 +1,77 @@
+{% extends "jobs/base.html" %} {% block title %}Run Job{% endblock %} {% block sidebar %}
+<li><a href="/">Overview</a></li>
+<li><a href="/create">Create Job</a></li>
+<li class="active"><a href="/run">Run Job<span class="sr-only">(current)</span></a></li>
+<li><a href="#">Export</a></li>
+{% endblock %} {% block content %}
+
+<div class="row">
+    <div class="col-xs-8 col-sm-4">
+        <label for="job_selected">Choose a job:</label>
+        <select id="job_selected" class="form-control" name="job_selected">
+            {% for job in jobs %}
+            <option value="{{ job.job_name }}">{{ job.job_name }}</option>
+            {% endfor %}
+        </select>
+        <label> Details: </label>
+        <table class="table table-striped">
+            <!-- <thead>
+          <tr>
+            <th>Header</th>
+            <th>Header</th>
+            <th>Header</th>
+            <th>Header</th>
+          </tr>
+        </thead> -->
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>Job Name:</td>
+                    <td>{{ job.job_name }}</td>
+                </tr>
+                <tr>
+                    <td>Code URL:</td>
+                    <td>{{ job.code_url }}</td>
+                </tr>
+                <tr>
+                    <td>Data Used:</td>
+                    <td>{% for data in job.data_used.all() %}{{ data }}
+{%  %}</td>
+                </tr>
+                <tr>
+                    <td>Command:</td>
+                    <td>{{ job.command }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+    <h4>Label</h4>
+    <span class="text-muted">Something else</span>
+  </div>
+  <div class="col-xs-6 col-sm-3 placeholder">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+    <h4>Label</h4>
+    <span class="text-muted">Something else</span>
+  </div>
+  <div class="col-xs-6 col-sm-3 placeholder">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+    <h4>Label</h4>
+    <span class="text-muted">Something else</span>
+  </div>
+  <div class="col-xs-6 col-sm-3 placeholder">
+    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
+    <h4>Label</h4>
+    <span class="text-muted">Something else</span> -->
+    </div>
+    <div class="col-xs-16 col-sm-8">
+        <p>
+            Choose Servers:
+        </p>
+    </div>
+</div>
+
+
+
+{% endblock %}
