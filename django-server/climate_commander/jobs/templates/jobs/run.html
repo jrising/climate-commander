@@ -1,77 +1,112 @@
-{% extends "jobs/base.html" %} {% block title %}Run Job{% endblock %} {% block sidebar %}
+{% extends "jobs/base.html" %}
+
+{% block title %}Run Job{% endblock %}
+
+{% block sidebar %}
 <li><a href="/">Overview</a></li>
 <li><a href="/create">Create Job</a></li>
 <li class="active"><a href="/run">Run Job<span class="sr-only">(current)</span></a></li>
-<li><a href="#">Export</a></li>
-{% endblock %} {% block content %}
+{% endblock %}
 
-<div class="row">
-    <div class="col-xs-8 col-sm-4">
-        <label for="job_selected">Choose a job:</label>
-        <select id="job_selected" class="form-control" name="job_selected">
-            {% for job in jobs %}
-            <option value="{{ job.job_name }}">{{ job.job_name }}</option>
-            {% endfor %}
-        </select>
-        <label> Details: </label>
-        <table class="table table-striped">
-            <!-- <thead>
-          <tr>
-            <th>Header</th>
-            <th>Header</th>
-            <th>Header</th>
-            <th>Header</th>
-          </tr>
-        </thead> -->
-            <tbody>
+{% block content %}
+<form name="job_selector" id="job_selector" action="" method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-xs-12 col-sm-6">
+            <h4 for="job_selected">Choose a job:</h4>
+            <select id="job_selected" class="form-control" name="job_selected">
                 {% for job in jobs %}
-                <tr>
-                    <td>Job Name:</td>
-                    <td>{{ job.job_name }}</td>
-                </tr>
-                <tr>
-                    <td>Code URL:</td>
-                    <td>{{ job.code_url }}</td>
-                </tr>
-                <tr>
-                    <td>Data Used:</td>
-                    <td>{% for data in job.data_used.all() %}{{ data }}
-{%  %}</td>
-                </tr>
-                <tr>
-                    <td>Command:</td>
-                    <td>{{ job.command }}</td>
-                </tr>
+                <option value="{{ job.job_name }}">{{ job.job_name }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
-    <h4>Label</h4>
-    <span class="text-muted">Something else</span>
-  </div>
-  <div class="col-xs-6 col-sm-3 placeholder">
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
-    <h4>Label</h4>
-    <span class="text-muted">Something else</span>
-  </div>
-  <div class="col-xs-6 col-sm-3 placeholder">
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
-    <h4>Label</h4>
-    <span class="text-muted">Something else</span>
-  </div>
-  <div class="col-xs-6 col-sm-3 placeholder">
-    <img src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" width="200" height="200" class="img-responsive" alt="Generic placeholder thumbnail">
-    <h4>Label</h4>
-    <span class="text-muted">Something else</span> -->
+            </select>
+            <h5> Details: </h5>
+            <table class="table table-striped">
+            {% for job in jobs %}
+                <tbody class="job{% if not forloop.first %} hide{% endif%}">
+                    <tr>
+                        <td>Job Name:</td>
+                        <td>{{ job.job_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Code URL:</td>
+                        <td>{{ job.code_url }}</td>
+                    </tr>
+                    <tr>
+                        <td>Data Used:</td>
+                        <td>{% for data in job.data_used.all %}
+                            <p class="data_used">{{ data }}<span class="volume" style="float: right">{{ data.size }} GB</span></p>
+                            {% endfor %}
+                            <p style="text-align: right">Total: <span class="total" style="float: right"></span></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Command:</td>
+                        <td>{{ job.command }}</td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+            </table>
+        </div>
     </div>
-    <div class="col-xs-16 col-sm-8">
-        <p>
-            Choose Servers:
-        </p>
+        <!-- </div>
+        <div class="col-xs-12 col-sm-6"> -->
+    <div class="row">
+        <div class="col-xs-12 col-sm-6">
+            <h4>
+                Choose Servers (Assign number of repetitions for each server):
+            </h4>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+            <input class="btn btn-primary" id="refresh" value="Refresh">
+        </div>
     </div>
-</div>
-
-
+    <script>var server_utils = []</script>
+    {% for server in servers %}
+    <div class="row server">
+        <div class="col-xs-12 col-sm-6">
+            <h4 style="margin-top:30px;">{{ server.server_name }}, {{ server.server_location }}</h4>
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <td>Data Hosted:</td>
+                        <td class="data_hosted">
+                            {% for data in server.data_hosted.all %}
+                            <span>{{ data }}{% if not forloop.last%}, {% endif %}</span>
+                            {% endfor%}</td>
+                    </tr>
+                    <tr>
+                        <td>Data Covered (% of vol):</td>
+                        <td class="data_covered"> % </td>
+                    </tr>
+                    <tr>
+                        <td>Data Missed:</td>
+                        <td class="data_missed"> GB </td>
+                    </tr>
+                    <tr>
+                        <td>Cores Available:</td>
+                        <td><span class="cpus_avail" style="color: green;"></span>/{{ server.server_cpus }} (cores with util < 10%) </td>
+                    </tr>
+                    <script>
+                        server_utils['{{ server.server_name }}']= {{ server.cpu_util }}
+                    </script>
+                    <tr>
+                        <td style="strong">Repetitions (Input # of cores):</td>
+                        <td><input type="number" id="{{ server.server_name }}" class="form-control cpu_used" name="{{ server.server_name }}" /></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-xs-12 col-sm-6 chartHolder">
+        </div>
+    </div>
+    {% endfor %}
+    <div class="row">
+        <div class="col-xs-12 col-sm-6">
+            <h4><span> Total Repetitions: </span><span class="total_reps"> 35</span><span style="float:right"><input class="btn btn-primary" type="submit" value="Run!"></span></h4>
+        </div>
+    </div>
+</form>
+{% endblock %}
+{% block js %}
 
 {% endblock %}

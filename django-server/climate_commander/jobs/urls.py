@@ -6,5 +6,7 @@ urlpatterns = [
     url(r'^$', views.dashboard, name='dashboard'),
     url(r'^create/$', views.create, name='create'),
     url(r'^run/$', views.run, name='run'),
-    url(r'^run_ajax/$', views.run_ajax, name='run'),
+    url(r'^run_ajax/$', views.run_ajax, name='run_ajax'),
+    # url(r'^simple_chart/$', views.simple_chart, name="simple_chart"),
+    # url(r'^edit/$', views.edit, name='edit'),
 ]
