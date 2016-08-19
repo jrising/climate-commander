@@ -2,9 +2,10 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, JsonResponse
 from django.core.urlresolvers import reverse
 from django.utils import timezone
-from .forms import JobForm
-from .models import Job, Dataset, Server
-from .server_command import instantiate_server, update_cpu_util
+from .forms import JobCreateForm, JobRunForm
+from .models import Job, Dataset, Server, JobRunningOnServer
+from .server_command import instantiate_server, update_cpu_util, prepare_server, run_job
+
 
 def dashboard(request):
     return render(request, 'jobs/index.html', )
@@ -13,7 +14,7 @@ def dashboard(request):
 def create(request):
     dataset = Dataset.objects.all()
     if request.method == 'POST':
-        form = JobForm(request.POST)
+        form = JobCreateForm(request.POST)
         if form.is_valid():
             job_instance = form.save(commit=False)
             job_instance.create_time = timezone.now()
@@ -27,20 +28,39 @@ def create(request):
         return render(request, 'jobs/create.html', {'dataset': dataset})
 
 servers_dict = {}
+# Store instantiated servers as values under their 'server_name' as keys.
 
 
 def run(request):
+    servers = Server.objects.all()
+    jobs = Job.objects.order_by('create_time').reverse()
+    context = {'jobs': jobs, 'servers': servers}
     if request.method == 'POST':
-        print(request.POST)
-        job_selected = request.POST['job_selected']
-        return HttpResponseRedirect(reverse('jobs:dashboard'))
+        runForm = JobRunForm(request.POST)
+        if runForm.is_valid():
+            print(request.POST)
+            job_selected = Job.objects.get(job_name=request.POST['job_selected'])
+            for server_model in servers:
+                if server_model.server_name not in servers_dict:
+                    servers_dict[server_model.server_name] = instantiate_server(server_model)
+                if server_model.server_name in request.POST:
+                    job_running = JobRunningOnServer.objects.create(server=server_model, job=job_selected, start_time=timezone.now())
+                    prepare_server(server_model, servers_dict, job_selected, job_running)
+                    pid = []
+                    for i in range(int(request.POST[server_model.server_name])):
+                        # run_job(server_model, servers_dict, job_selected, job_running)
+                        pid.append(str(servers_dict[server_model.server_name].start_process(job_selected.command)) + "\n")
+                    job_running.pid = pid
+                    job_running.save()
+            return HttpResponseRedirect(reverse('jobs:dashboard'))
+        else:
+            context['error_message'] = runForm.errors
+            return render(request, 'jobs/run.html', context)
     else:
-        jobs = Job.objects.order_by('create_time').reverse()
-        servers = Server.objects.all()
-        for i in servers:
-            servers_dict[i.server_name] = instantiate_server(i)
-            i.cpu_util = update_cpu_util(i, servers_dict)
-        context = {'jobs': jobs, 'servers': servers}
+        for server_model in servers:
+            if server_model.server_name not in servers_dict:
+                servers_dict[server_model.server_name] = instantiate_server(server_model)
+                server_model.cpu_util = update_cpu_util(server_model, servers_dict)
         return render(request, 'jobs/run.html', context)
 
 
