@@ -55,6 +55,8 @@
             <h4>
                 Choose Servers (Assign number of repetitions for each server):
             </h4>
+            {% if error_message %}<h3>Run Failed!</h3>
+            {{error_message}}{% endif %}
         </div>
         <div class="col-xs-12 col-sm-6">
             <input class="btn btn-primary" id="refresh" value="Refresh">
@@ -91,7 +93,7 @@
                     </script>
                     <tr>
                         <td style="strong">Repetitions (Input # of cores):</td>
-                        <td><input type="number" id="{{ server.server_name }}" class="form-control cpu_used" name="{{ server.server_name }}" /></td>
+                        <td><input type="number" id="{{ server.server_name }}" class="form-control cpu_used" name="{{ server.server_name }}" value="0"/></td>
                     </tr>
                 </tbody>
             </table>
@@ -102,7 +104,7 @@
     {% endfor %}
     <div class="row">
         <div class="col-xs-12 col-sm-6">
-            <h4><span> Total Repetitions: </span><span class="total_reps"> 35</span><span style="float:right"><input class="btn btn-primary" type="submit" value="Run!"></span></h4>
+            <h4><span> Total Repetitions: </span><span class="total_reps"> 0</span><span style="float:right"><input class="btn btn-primary" type="submit" value="Run!"></span></h4>
         </div>
     </div>
 </form>

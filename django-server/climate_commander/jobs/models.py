@@ -7,8 +7,9 @@ from django.db import models
 class Dataset(models.Model):
     dataset_name = models.CharField(max_length=200, primary_key=True, unique=True)
     size = models.FloatField()
+    store_folder = models.CharField(max_length=200)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.dataset_name
 
 
@@ -24,7 +25,7 @@ class Server(models.Model):
     crdntl_domain = models.CharField(max_length=50)
     crdntl_password = models.CharField(max_length=20)
 
-    def __str__(self):
+    def __unicode__(self):
         return self.server_name
 
 
@@ -34,6 +35,15 @@ class Job(models.Model):
     code_url = models.URLField(max_length=200)
     command = models.TextField()
     create_time = models.DateTimeField('Time Created')
+    server_running = models.ManyToManyField(Server, through="JobRunningOnServer")
 
-    def __str__(self):
+    def __unicode__(self):
         return self.job_name
+
+
+class JobRunningOnServer(models.Model):
+    server = models.ForeignKey(Server, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    start_time = models.DateTimeField('Time When the Job Starts')
+    status = models.CharField(max_length=6000, null=True)
+    pid = models.CharField(max_length=2000, null=True)
