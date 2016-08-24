@@ -48,6 +48,7 @@ def create(request):
         if form.is_valid():
             job_instance = form.save(commit=False)
             job_instance.create_time = timezone.now()
+            job_instance.running = False
             job_instance.save()
             form.save_m2m()
             print(str(form.cleaned_data['data_used']))
