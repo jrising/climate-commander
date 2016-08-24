@@ -38,7 +38,7 @@ class Job(models.Model):
     result_directory = models.CharField(max_length=200)
     create_time = models.DateTimeField('Time Created')
     start_time = models.DateTimeField('Time When the Job Starts', null=True)
-    running = models.BooleanField()
+    running = models.BooleanField(null=True)
     server_running = models.ManyToManyField(Server, through="JobRunningOnServer")
 
     def __unicode__(self):
