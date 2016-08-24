@@ -41,7 +41,7 @@ def calculate_cpu_util(prev_time, post_time):
     return ret
 
 
-def prepare_server(server_model, servers_dict, job_model, job_running):
+def prepare_server(server_model, servers_dict, job_model):
     server = servers_dict[server_model.server_name]
     code_url = job_model.code_url
     roots_src = server_model.roots_src
@@ -51,10 +51,11 @@ def prepare_server(server_model, servers_dict, job_model, job_running):
     data_missed = check_data(server_model, job_model)
     copy_data(server, data_missed)
     invoke_virtualenv(server_model.server_name, server)
+    return server
 
 
 def update_codebase(server, code_url, roots_src):
-    codebase = code_url.split("/")[-1].rstrip(".git")
+    codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
     server.cwd(roots_src + "/" + codebase)
     stdout, stderr = server.run_command("git pull")
     print(stdout, stderr)
@@ -63,6 +64,7 @@ def update_codebase(server, code_url, roots_src):
     if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
         clean_codebase(server, codebase, roots_src)
         clone_codebase(server, code_url, roots_src)
+        server.cwd(roots_src + "/" + codebase)
 
 
 def clone_codebase(server, code_url, roots_src):
@@ -105,5 +107,35 @@ def invoke_virtualenv(server_name, server):
         server.run_command("source /home/jrising/aggregator/env/bin/activate")
 
 
-def run_job(server_model, servers_dict, job_selected, job_running):
-    return
+def count_result_files(job_model, server_model, server):
+    result_file = job_model.result_file
+    result_directory = job_model.result_directory
+    count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n'))
+    print(count)
+    server_model.result_nums = count
+    print(server_model.result_nums)
+    server_model.save()
+    return count
+
+
+def update_process_live(process, server):
+    lines = server.run_command("ps -l %d; echo $?" % (process.pid))
+    print(lines)
+    if len(lines[0].split('\n')) < 3:
+        process.status = 'Stopped'
+        process.save()
+        return False
+    else:
+        process.status = 'Running'
+        process.save()
+        return True
+
+
+
+
+
+
+# def run_job(server, job_selected, job_running, cores_used):
+#     for i in range(cores_used):
+#         server.start_process(job_selected.command)
+#     return
