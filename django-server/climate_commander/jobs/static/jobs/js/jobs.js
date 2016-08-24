@@ -99,7 +99,7 @@ $("#refresh").click(function(){
         $("#refresh").removeAttr("disabled");
     }, 1000);
 });
-
+ // jQuery UI (Spinner)
 $(".cpu_used").change(function(){
     var total_reps = 0;
     $(".cpu_used").each(function(){
@@ -164,3 +164,17 @@ function calculate_cpus_avail(util_list, server_element){
     util_list.map(function(x){if(x <= 10)num++;});
     server_element.find(".cpus_avail").html(num);
 }
+
+$(".stop_job").click(function(){
+    job_name = $(this).parents('h3').text();
+    $.ajax({
+        type: "POST",
+        url: "/stop_job/",
+        data:{
+            job_name: job_name
+        },
+        success: function(ret){
+
+        }
+    });
+});

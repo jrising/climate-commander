@@ -34,7 +34,11 @@ class Job(models.Model):
     data_used = models.ManyToManyField(Dataset)
     code_url = models.URLField(max_length=200)
     command = models.TextField()
+    result_file = models.CharField(max_length=200)
+    result_directory = models.CharField(max_length=200)
     create_time = models.DateTimeField('Time Created')
+    start_time = models.DateTimeField('Time When the Job Starts', null=True)
+    running = models.BooleanField()
     server_running = models.ManyToManyField(Server, through="JobRunningOnServer")
 
     def __unicode__(self):
@@ -45,5 +49,21 @@ class JobRunningOnServer(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE)
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
     start_time = models.DateTimeField('Time When the Job Starts')
-    status = models.CharField(max_length=6000, null=True)
-    pid = models.CharField(max_length=2000, null=True)
+    result_nums = models.IntegerField(null=True)
+    cores_used = models.IntegerField(null=True)
+    process_living = models.IntegerField(null=True)
+    status = models.CharField(max_length=600, null=True)
+
+    def __unicode__(self):
+        return self.job.job_name
+
+
+class Process(models.Model):
+    job_spawning = models.ForeignKey(JobRunningOnServer, on_delete=models.CASCADE)
+    start_time = models.DateTimeField('Time When the Process Starts')
+    pid = models.IntegerField()
+    status = models.CharField(max_length=20, null=True)
+    log_file = models.CharField(max_length=200)
+
+    def __unicode__(self):
+        return self.job_spawning.job.job_name

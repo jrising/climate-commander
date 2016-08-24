@@ -32,6 +32,14 @@
                         <td>{{ job.code_url }}</td>
                     </tr>
                     <tr>
+                        <td>Name of Result file:</td>
+                        <td>{{ job.result_file }}</td>
+                    </tr>
+                    <tr>
+                        <td>Path to Result Directory:</td>
+                        <td>{{ job.result_directory }}</td>
+                    </tr>
+                    <tr>
                         <td>Data Used:</td>
                         <td>{% for data in job.data_used.all %}
                             <p class="data_used">{{ data }}<span class="volume" style="float: right">{{ data.size }} GB</span></p>
