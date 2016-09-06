@@ -52,7 +52,7 @@ def create(request):
             job_instance.save()
             form.save_m2m()
             print(str(form.cleaned_data['data_used']))
-            return HttpResponseRedirect(reverse('jobs:run'))
+            return HttpResponseRedirect('/run')
         else:
             return render(request, 'jobs/create.html', {'error_message': form.errors, 'dataset': dataset})
     else:
@@ -81,7 +81,7 @@ def run(request):
                         pid, log_file = str(server.start_process(job_selected.command)).split(',')[2:]
                         process = Process(job_spawning=job_running, start_time=timezone.now(), pid=int(pid), log_file=log_file, status="Running")
                         process.save()
-            return HttpResponseRedirect(reverse('jobs:dashboard'))
+            return render(request, 'jobs/dashboard')
         else:
             context['error_message'] = runForm.errors
             return render(request, 'jobs/run.html', context)
