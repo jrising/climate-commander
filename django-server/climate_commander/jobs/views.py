@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .forms import JobCreateForm, JobRunForm
 from .models import Job, Dataset, Server, Process, JobRunningOnServer
 from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files
+import os
 
 servers_dict = {}
 # Store instantiated servers as values under their 'server_name' as keys.
@@ -25,6 +26,11 @@ def dashboard(request):
             server.process_living = count
             server.save()
     return render(request, 'jobs/index.html', context)
+
+
+def restart(request):
+    print("reached.")
+    os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}`")
 
 
 @csrf_exempt
@@ -70,6 +76,7 @@ def run(request):
             job_selected = Job.objects.get(job_name=request.POST['job_selected'])
             job_selected.start_time = timezone.now()
             job_selected.running = True
+            job_selected.save()
             for server_model in servers:
                 if server_model.server_name in request.POST:
                     cores_used = int(request.POST[server_model.server_name])
