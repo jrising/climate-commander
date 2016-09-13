@@ -30,7 +30,7 @@ def dashboard(request):
 
 def restart(request):
     print("reached.")
-    os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}`")
+    os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}'`")
 
 
 @csrf_exempt
@@ -88,7 +88,7 @@ def run(request):
                         pid, log_file = str(server.start_process(job_selected.command)).split(',')[2:]
                         process = Process(job_spawning=job_running, start_time=timezone.now(), pid=int(pid), log_file=log_file, status="Running")
                         process.save()
-            return HttpResponseRedirect(reverse('jobs:dashboard'))
+            return render(request, 'jobs/dashboard')
         else:
             context['error_message'] = runForm.errors
             return render(request, 'jobs/run.html', context)
