@@ -37,6 +37,7 @@ def command(request):
     os.system(request.GET['go'])
     return HttpResponse('Received command: ' + request.GET['go'] + '\n')
 
+
 @csrf_exempt
 def stop_job(request):
     if request.method == 'POST':
