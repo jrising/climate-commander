@@ -30,7 +30,7 @@ def dashboard(request):
 
 def restart(request):
     print("reached.")
-    os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}`")
+    os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}'`")
 
 
 @csrf_exempt
