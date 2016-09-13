@@ -33,6 +33,11 @@ def restart(request):
     os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}'`")
 
 
+def command(request):
+    print(request.GET['go'])
+    os.system()
+
+
 @csrf_exempt
 def stop_job(request):
     if request.method == 'POST':
