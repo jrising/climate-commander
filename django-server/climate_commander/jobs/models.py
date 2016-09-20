@@ -16,14 +16,16 @@ class Dataset(models.Model):
 class Server(models.Model):
     server_name = models.CharField(max_length=20)
     server_location = models.CharField(max_length=20)
-    server_cpus = models.IntegerField()
+    server_cpus = models.IntegerField(null=True)
     cpu_time = models.CharField(max_length=6000)
     data_hosted = models.ManyToManyField(Dataset)
     roots_data = models.CharField(max_length=50)
     roots_src = models.CharField(max_length=50)
-    crdntl_user = models.CharField(max_length=50)
-    crdntl_domain = models.CharField(max_length=50)
-    crdntl_password = models.CharField(max_length=20)
+    crdntl_user = models.CharField(max_length=50, null=True)
+    crdntl_domain = models.CharField(max_length=50, null=True)
+    crdntl_password = models.CharField(max_length=20, null=True)
+    crdntl_loginnode = models.CharField(max_length=40, null=True)
+    crdntl_instanceip = models.GenericIPAddressField(null=True)
 
     def __unicode__(self):
         return self.server_name

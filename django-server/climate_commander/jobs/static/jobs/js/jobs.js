@@ -121,7 +121,7 @@ var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10, "%");
 // var svgs = [];
 $(".server").each(function(){
     server = $(this).find("h4").text().split(",")[0];
-    var svg = d3.select(".chartHolder").append("svg")
+    var svg = d3.select(this).selectAll(".chartHolder").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")

@@ -1,5 +1,5 @@
-from computer import login_server
-
+from computer import login_server, osdc_server
+import os
 
 def instantiate_server(server_model):
     '''
@@ -8,9 +8,20 @@ def instantiate_server(server_model):
     utup = (server_model.server_name, server_model.server_location)
     cpus = server_model.server_cpus
     roots = {'data': server_model.roots_data, 'src': server_model.roots_src}
-    credentials = {'username': server_model.crdntl_user, 'domain': server_model.crdntl_domain, 'password': server_model.crdntl_password}
-    server = login_server.LoginServer(utup, cpus, roots, credentials)
+    credentials = {'username': server_model.crdntl_user,
+                   'domain': server_model.crdntl_domain,
+                   'password': server_model.crdntl_password,
+                   'loginnode': server_model.crdntl_loginnode,
+                   'instanceip': server_model.crdntl_instanceip}
+    if server_model.server_name == 'Shackleton':
+        server = login_server.LoginServer(utup, cpus, roots, credentials)
+    elif server_model.server_name == 'Griffin':
+        os.system('eval `ssh-agent`')
+        os.system('ssh-add ~/.ssh/jongkaishackleton.pem')
+        server = osdc_server.OSDCServer(utup, cpus, roots, credentials)
     server.connect()
+    print('go', server.utup[0])
+    print(server.session)
     return server
 
 
@@ -19,6 +30,7 @@ def update_cpu_util(server_model, servers_dict):
     server_model.cpu_time = get_cpu_time(servers_dict[server_model.server_name])
     server_model.save()
     post_time = server_model.cpu_time
+    print(post_time)
     return calculate_cpu_util(prev_time, post_time)
 
 
