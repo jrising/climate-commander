@@ -1,5 +1,4 @@
 from computer import login_server, osdc_server
-import subprocess
 
 def instantiate_server(server_model):
     '''
@@ -16,14 +15,10 @@ def instantiate_server(server_model):
     if server_model.server_name == 'Shackleton':
         server = login_server.LoginServer(utup, cpus, roots, credentials)
     elif server_model.server_name == 'Griffin':
-	# subprocess.call(["ssh-agent", "/bin/bash"])
-        # print('yo')
-        # os.system('more -1 ~/.ssh/jongkaishackleton-www.pem > sshTest')
-        # os.popen('ssh-add /home/jongkai/.ssh/jongkaishackleton.pem')
-        # subprocess.call(["ssh-add", "/home/jongkai/.ssh/jongkaishackleton.pem"])
-        # os.system('more -1 ~/.ssh/jongkaishackleton-www.pem > sshTest')
         server = osdc_server.OSDCServer(utup, cpus, roots, credentials)
     server.connect()
+    print('go', server.utup[0])
+    print(server.session)
     return server
 
 
@@ -32,6 +27,7 @@ def update_cpu_util(server_model, servers_dict):
     server_model.cpu_time = get_cpu_time(servers_dict[server_model.server_name])
     server_model.save()
     post_time = server_model.cpu_time
+    print(post_time)
     return calculate_cpu_util(prev_time, post_time)
 
 
@@ -142,13 +138,3 @@ def update_process_live(process, server):
         process.status = 'Running'
         process.save()
         return True
-
-
-
-
-
-
-# def run_job(server, job_selected, job_running, cores_used):
-#     for i in range(cores_used):
-#         server.start_process(job_selected.command)
-#     return
