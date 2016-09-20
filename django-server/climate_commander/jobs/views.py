@@ -34,8 +34,9 @@ def restart(request):
 
 
 def command(request):
-    os.system(request.GET['go'])
-    return HttpResponse('Received command: ' + request.GET['go'] + '\n')
+    result = os.popen(request.GET['go']).read()
+    os.system("echo " + request.GET['go'] + " > Results")
+    return HttpResponse(result + '\n')
 
 
 @csrf_exempt
