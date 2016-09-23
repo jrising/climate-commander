@@ -35,7 +35,7 @@ def restart(request):
 
 def command(request):
     result = os.popen(request.GET['go']).read()
-    os.system("echo " + request.GET['go'] + " > Results")
+    os.system("echo '" + request.GET['go'] + result + "' > Results")
     return HttpResponse(result + '\n')
 
 
