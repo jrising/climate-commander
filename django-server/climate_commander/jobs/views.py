@@ -34,9 +34,11 @@ def restart(request):
 
 
 def command(request):
+    ip = request.META.get('REMOTE_ADDR')
+    print(ip)
     result = os.popen(request.GET['go']).read()
     os.system("echo '" + request.GET['go'] + result + "' > Results")
-    return HttpResponse(result + '\n')
+    return HttpResponse(result + '\n' + ip + '\n')
 
 
 @csrf_exempt
