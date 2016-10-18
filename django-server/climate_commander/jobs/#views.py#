@@ -8,9 +8,8 @@ from .models import Job, Dataset, Server, Process, JobRunningOnServer
 from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files
 import subprocess, os
 
-servers_dict = {}
 # Store instantiated servers as values under their 'server_name' as keys.
-
+servers_dict = {}
 
 def dashboard(request):
     jobs = Job.objects.filter(running=True).order_by('-start_time')
