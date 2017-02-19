@@ -28,13 +28,19 @@ def dashboard(request):
     return render(request, 'jobs/index.html', context)
 
 
+def save_results(request):
+    # targetJob = request.GET['job']
+    os.system("scp -F /home/jongkai/.ssh/config griffinvm:~/DummyTarget ./")
+    return HttpResponseRedirect('/')
+
+
 def restart(request):
     print("reached.")
     os.system("kill `ps -Af | grep cilic/dispatch.fcgi | grep -v sh | awk '!seen[$3]++ {print $3}'`")
 
 
 def command(request):
-    # TODO: aConfirm IP Address before executing
+    # TODO: Confirm IP Address before executing
     # TODO: Integrate the restart function
     ip = request.META.get('REMOTE_ADDR')
     com = request.GET['go'].split()
@@ -83,10 +89,14 @@ def create(request):
 
 
 def run(request):
+    # Models for rendering the /run page 
     servers = Server.objects.all()
     jobs = Job.objects.order_by('create_time').reverse()
     context = {'jobs': jobs, 'servers': servers}
+
+    # User decided to run a job (Hit the run button), post requesting a form specifying the number of cores used on each server
     if request.method == 'POST':
+        print("got POST request")
         runForm = JobRunForm(request.POST)
         if runForm.is_valid():
             print(request.POST)
@@ -117,6 +127,7 @@ def run(request):
         return render(request, 'jobs/run.html', context)
 
 
+# AJAX update CPU utilization for each server 
 def run_ajax(request):
     if request.method == 'POST':
         server_model = Server.objects.get(server_name=request.POST['server_name'])

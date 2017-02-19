@@ -7,11 +7,13 @@ def instantiate_server(server_model):
     utup = (server_model.server_name, server_model.server_location)
     cpus = server_model.server_cpus
     roots = {'data': server_model.roots_data, 'src': server_model.roots_src}
-    credentials = {'username': server_model.crdntl_user,
+    credentials = {'userName': server_model.crdntl_user,
                    'domain': server_model.crdntl_domain,
                    'password': server_model.crdntl_password,
-                   'loginnode': server_model.crdntl_loginnode,
-                   'instanceip': server_model.crdntl_instanceip}
+                   'loginNode': server_model.crdntl_loginnode,
+                   'instanceIP': server_model.crdntl_instanceip,
+                   'instanceName': server_model.crdntl_instanceName,
+                   'pem': server_model.crdntl_pem}
     if server_model.server_name == 'Shackleton':
         server = login_server.LoginServer(utup, cpus, roots, credentials)
     elif server_model.server_name == 'Griffin':
@@ -56,29 +58,40 @@ def prepare_server(server_model, servers_dict, job_model):
     roots_src = server_model.roots_src
     if not server.check_connection():
         server.connect()
-    update_codebase(server, code_url, roots_src)
+    update_codebase(server_model, server, code_url, roots_src)
     data_missed = check_data(server_model, job_model)
     copy_data(server, data_missed)
     invoke_virtualenv(server_model.server_name, server)
     return server
 
 
-def update_codebase(server, code_url, roots_src):
+def update_codebase(server_model, server, code_url, roots_src):
     codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
     server.cwd(roots_src + "/" + codebase)
-    stdout, stderr = server.run_command("git pull")
+
+    if server_model.server_name == 'Shackleton':
+        stdout, stderr = server.run_command("git pull")
+    elif server_model.server_name == 'Griffin':
+        stdout, stderr = server.run_command("with_proxy sudo -E git pull")
+
+    # stdout, stderr = server.run_command("git pull")
     print(stdout, stderr)
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
     if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
         clean_codebase(server, codebase, roots_src)
-        clone_codebase(server, code_url, roots_src)
+        clone_codebase(server_model, server, code_url, roots_src)
         server.cwd(roots_src + "/" + codebase)
 
 
-def clone_codebase(server, code_url, roots_src):
+def clone_codebase(server_model, server, code_url, roots_src):
     server.cwd(roots_src)
-    stdout, stderr = server.run_command("git clone " + code_url)
+    if server_model.server_name == 'Shackleton':
+        stdout, stderr = server.run_command("git clone " + code_url)
+    elif server_model.server_name == 'Griffin':
+        stdout, stderr = server.run_command("with_proxy git clone " + code_url)
+
+    # stdout, stderr = server.run_command("git clone " + code_url)
     if stderr:
         raise SystemExit("Cannot clone %s:\n %s" % (code_url, stderr))
     print(stdout)

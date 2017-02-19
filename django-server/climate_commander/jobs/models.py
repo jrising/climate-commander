@@ -26,6 +26,8 @@ class Server(models.Model):
     crdntl_password = models.CharField(max_length=20, null=True)
     crdntl_loginnode = models.CharField(max_length=40, null=True)
     crdntl_instanceip = models.GenericIPAddressField(null=True)
+    crdntl_instanceName = models.CharField(max_length=50, null=True)
+    crdntl_pem = models.CharField(max_length=100, null=True)
 
     def __unicode__(self):
         return self.server_name
