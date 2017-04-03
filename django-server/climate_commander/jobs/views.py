@@ -89,7 +89,7 @@ def create(request):
 
 
 def run(request):
-    # Models for rendering the /run page 
+    # Models for rendering the /run page
     servers = Server.objects.all()
     jobs = Job.objects.order_by('create_time').reverse()
     context = {'jobs': jobs, 'servers': servers}
@@ -104,26 +104,26 @@ def run(request):
             job_selected.start_time = timezone.now()
             job_selected.running = True
             job_selected.save()
-
             for server_model in servers:
                 if server_model.server_name in request.POST:
-                    print server_model
                     cores_used = int(request.POST[server_model.server_name][0])
-                    if server_model.server_name not in servers_dict:
-                        servers_dict[server_model.server_name] = instantiate_server(server_model, debug=False)
+                    if cores_used > 0:
+                        if server_model.server_name not in servers_dict:
+                            servers_dict[server_model.server_name] = instantiate_server(server_model, debug=False)
 
-                    server, message = prepare_server(server_model, servers_dict, job_selected)
-                    context['message'] = message
-                    # return render(request, 'jobs/index.html', context)
-
-                    job_running = JobRunningOnServer.objects.create(server=server_model, 
-                                                                    job=job_selected, cores_used=cores_used, 
-                                                                    start_time = timezone.now(), status='Running')
-                    pid_list = run_job(server_model, server, job_selected, cores_used) 
-                    for i in range(cores_used):
-                        process = Process(job_spawning=job_running, start_time=timezone.now(), 
-                                          pid=int(pid_list[i][0]), log_file=pid_list[i][1], status="Running")
-                        process.save()
+                        server, message = prepare_server(server_model, servers_dict, job_selected)
+                        context['message'] = message
+                        if JobRunningOnServer.objects.filter(job=job_selected, server=server_model).exists():
+                            job_running = JobRunningOnServer.objects.filter(job=job_selected, server=server_model)
+                        else:
+                            job_running = JobRunningOnServer.objects.create(server=server_model,
+                                                                            job=job_selected, cores_used=cores_used,
+                                                                            start_time=timezone.now(), status='Running')
+                        pid_list = run_job(server_model, server, job_selected, cores_used)
+                        for i in range(cores_used):
+                            process = Process(job_spawning=job_running, start_time=timezone.now(),
+                                              pid=int(pid_list[i][0]), log_file=pid_list[i][1], status="Running")
+                            process.save()
             return HttpResponseRedirect('/')
             # return render(request, 'jobs/index.html')
         else:
@@ -137,7 +137,7 @@ def run(request):
         return render(request, 'jobs/run.html', context)
 
 
-# AJAX update CPU utilization for each server 
+# AJAX update CPU utilization for each server
 def run_ajax(request):
     if request.method == 'POST':
         server_model = Server.objects.get(server_name=request.POST['server_name'])
