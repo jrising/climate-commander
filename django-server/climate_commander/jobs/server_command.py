@@ -1,9 +1,13 @@
 from computer import login_server, osdc_server
+import time
 
-def instantiate_server(server_model):
+
+def instantiate_server(server_model, debug=False):
     '''
     Convert a server representation in database into a connected computer.login_server.LoginServer.
     '''
+    if debug:
+        return
     utup = (server_model.server_name, server_model.server_location)
     cpus = server_model.server_cpus
     roots = {'data': server_model.roots_data, 'src': server_model.roots_src}
@@ -58,30 +62,36 @@ def prepare_server(server_model, servers_dict, job_model):
     roots_src = server_model.roots_src
     if not server.check_connection():
         server.connect()
-    update_codebase(server_model, server, code_url, roots_src)
+    # return (server, "") # message)
+
+    message = update_codebase(server_model, server, code_url, roots_src)
     data_missed = check_data(server_model, job_model)
     copy_data(server, data_missed)
     invoke_virtualenv(server_model.server_name, server)
-    return server
+    return (server, message)
 
 
 def update_codebase(server_model, server, code_url, roots_src):
     codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
     server.cwd(roots_src + "/" + codebase)
 
+    message = codebase + "\n"
+
     if server_model.server_name == 'Shackleton':
         stdout, stderr = server.run_command("git pull")
+        message += stdout +  stderr + "\n"
     elif server_model.server_name == 'Griffin':
-        stdout, stderr = server.run_command("with_proxy sudo -E git pull")
+        stdout, stderr = server.run_command("with_proxy git pull")
+        message += stdout +  stderr + "\n"
 
-    # stdout, stderr = server.run_command("git pull")
-    print(stdout, stderr)
     if stderr:
         raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
     if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
         clean_codebase(server, codebase, roots_src)
         clone_codebase(server_model, server, code_url, roots_src)
         server.cwd(roots_src + "/" + codebase)
+
+    return message
 
 
 def clone_codebase(server_model, server, code_url, roots_src):
@@ -108,6 +118,21 @@ def clean_codebase(server, codebase, roots_src):
     if stderr:
         raise SystemExit("Cannot remove %s:\n %s" % (codebase, stderr))
     print('removed directory: %s' % codebase)
+
+
+def run_job(server_model, server, job_model, cores_used):
+    code_url = job_model.code_url
+    codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
+    roots_src = server_model.roots_src
+    pid_list = []
+    for i in range(cores_used):
+        if not server.check_connection():
+            server.connect()
+        server.cwd(roots_src + "/" + codebase)
+        pid, log_file = str(server.start_process(job_model.command)).split(',')[2:]
+        pid_list.append((pid, log_file))
+        time.sleep(5)
+    return pid_list
 
 
 def check_data(server_model, job_model):

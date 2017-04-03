@@ -5,11 +5,11 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import JobCreateForm, JobRunForm
 from .models import Job, Dataset, Server, Process, JobRunningOnServer
-from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files
+from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files, run_job
 import subprocess, os
 
-servers_dict = {}
 # Store instantiated servers as values under their 'server_name' as keys.
+servers_dict = {}
 
 
 def dashboard(request):
@@ -104,20 +104,30 @@ def run(request):
             job_selected.start_time = timezone.now()
             job_selected.running = True
             job_selected.save()
+
             for server_model in servers:
                 if server_model.server_name in request.POST:
-                    cores_used = int(request.POST[server_model.server_name])
+                    print server_model
+                    cores_used = int(request.POST[server_model.server_name][0])
                     if server_model.server_name not in servers_dict:
-                        servers_dict[server_model.server_name] = instantiate_server(server_model)
-                    server = prepare_server(server_model, servers_dict, job_selected)
-                    job_running = JobRunningOnServer.objects.create(server=server_model, job=job_selected, cores_used=cores_used, start_time = timezone.now(), status='Running')
+                        servers_dict[server_model.server_name] = instantiate_server(server_model, debug=False)
+
+                    server, message = prepare_server(server_model, servers_dict, job_selected)
+                    context['message'] = message
+                    # return render(request, 'jobs/index.html', context)
+
+                    job_running = JobRunningOnServer.objects.create(server=server_model, 
+                                                                    job=job_selected, cores_used=cores_used, 
+                                                                    start_time = timezone.now(), status='Running')
+                    pid_list = run_job(server_model, server, job_selected, cores_used) 
                     for i in range(cores_used):
-                        pid, log_file = str(server.start_process(job_selected.command)).split(',')[2:]
-                        process = Process(job_spawning=job_running, start_time=timezone.now(), pid=int(pid), log_file=log_file, status="Running")
+                        process = Process(job_spawning=job_running, start_time=timezone.now(), 
+                                          pid=int(pid_list[i][0]), log_file=pid_list[i][1], status="Running")
                         process.save()
-            return render(request, 'jobs/dashboard')
+            return HttpResponseRedirect('/')
+            # return render(request, 'jobs/index.html')
         else:
-            context['error_message'] = runForm.errors
+            context['message'] = runForm.errors
             return render(request, 'jobs/run.html', context)
     else:
         for server_model in servers:
