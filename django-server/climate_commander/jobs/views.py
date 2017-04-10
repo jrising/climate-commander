@@ -114,7 +114,7 @@ def run(request):
                         server, message = prepare_server(server_model, servers_dict, job_selected)
                         context['message'] = message
                         if JobRunningOnServer.objects.filter(job=job_selected, server=server_model).exists():
-                            job_running = JobRunningOnServer.objects.filter(job=job_selected, server=server_model)
+                            job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_model)
                         else:
                             job_running = JobRunningOnServer.objects.create(server=server_model,
                                                                             job=job_selected, cores_used=cores_used,
