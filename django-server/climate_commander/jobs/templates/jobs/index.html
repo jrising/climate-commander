@@ -23,24 +23,24 @@
     </tr>
   </thead>
   <tbody>
-    {% for server in job.jobrunningonserver_set.all %}
+    {% for job_running in job.jobrunningonserver_set.all %}
     <tr>
-      <td>{{ server.server.server_name }}</td>
+      <td>{{ job_running.server.server_name }}</td>
       <td>{{ job.result_file }}</td>
-      <td>{{ server.result_nums}}</td>
+      <td>{{ job_running.result_nums}}</td>
       <td class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-            {{ server.process_living }}<span class="caret"></span></a>
+            {{ job_running.process_living }}<span class="caret"></span></a>
         <ul class="dropdown-menu" style="min-width:270px;padding:5px 5px">
-        {% for process in server.process_set.all %}
+        {% for process in job_running.process_set.all %}
           <li>
               <span> {{ process.pid }}  </span><span>  {{ process.status }} </span><span>   {{ process.log_file}} </span>
           </li>
         {% endfor %}
         </ul>
       </td>
-      <td>{{ server.cores_used }}</td>
-      <td>{{ server.status }}</td>
+      <td>{{ job_running.cores_used }}</td>
+      <td>{{ job_running.status }}</td>
     </tr>
     {% endfor %}
   </tbody>

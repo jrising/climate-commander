@@ -16,15 +16,17 @@ def dashboard(request):
     jobs = Job.objects.filter(running=True).order_by('-start_time')
     context = {'jobs': jobs}
     for job in jobs:
-        for server in job.jobrunningonserver_set.all():
-            if server.server.server_name not in servers_dict:
-                servers_dict[server.server.server_name] = instantiate_server(server.server)
-            count_result_files(job, server, servers_dict[server.server.server_name])
+        for job_running in job.jobrunningonserver_set.all():
+            if job_running.server.server_name not in servers_dict:
+                servers_dict[job_running.server.server_name] = instantiate_server(job_running.server)
+            count_result_files(job, job_running, servers_dict[job_running.server.server_name])
             count = 0
-            for process in server.process_set.all():
-                count = count + 1 if update_process_live(process, servers_dict[server.server.server_name]) else count
-            server.process_living = count
-            server.save()
+            for process in job_running.process_set.all():
+                count = count + 1 if update_process_live(process, servers_dict[job_running.server.server_name]) else count
+            job_running.process_living = count
+            if count == 0:
+                job_running.status = "Stopped"
+            job_running.save()
     return render(request, 'jobs/index.html', context)
 
 
@@ -115,6 +117,11 @@ def run(request):
                         context['message'] = message
                         if JobRunningOnServer.objects.filter(job=job_selected, server=server_model).exists():
                             job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_model)
+<<<<<<< HEAD
+=======
+                            job_running.cores_used += cores_used
+                            job_running.save()
+>>>>>>> b28f02612b3550e4eb9be894edbaa37eee8aa102
                         else:
                             job_running = JobRunningOnServer.objects.create(server=server_model,
                                                                             job=job_selected, cores_used=cores_used,

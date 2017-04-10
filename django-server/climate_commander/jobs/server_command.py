@@ -154,14 +154,14 @@ def invoke_virtualenv(server_name, server):
         server.run_command("source /home/jrising/aggregator/env/bin/activate")
 
 
-def count_result_files(job_model, server_model, server):
+def count_result_files(job_model, job_running, server):
     result_file = job_model.result_file
     result_directory = job_model.result_directory
     count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n'))
     print(count)
-    server_model.result_nums = count
-    print(server_model.result_nums)
-    server_model.save()
+    job_running.result_nums = count
+    print(job_running.result_nums)
+    job_running.save()
     return count
 
 
