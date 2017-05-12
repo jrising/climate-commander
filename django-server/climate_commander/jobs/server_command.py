@@ -176,3 +176,8 @@ def update_process_live(process, server):
         process.status = 'Running'
         process.save()
         return True
+
+
+def kill_process(process, server):
+    server.run_command("kill " + str(process.pid))
+

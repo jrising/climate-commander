@@ -5,8 +5,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import JobCreateForm, JobRunForm
 from .models import Job, Dataset, Server, Process, JobRunningOnServer
-from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files, run_job
-import subprocess, os
+from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files, run_job, kill_process
+import subprocess, os, time
 
 # Store instantiated servers as values under their 'server_name' as keys.
 servers_dict = {}
@@ -61,14 +61,23 @@ def command(request):
 @csrf_exempt
 def stop_job(request):
     if request.method == 'POST':
-
-        job_model = Job.objects.get(job_name=request.POST['job_name'])
-
-        # job_model.server_running.clear()
-
-        # if server_model.server_name not in servers_dict:
-        #     servers_dict[server_model.server_name] = instantiate_server(server_model)
-        ret = {request.POST['server_name']: update_cpu_util(server_model, servers_dict)}
+        job_selected = Job.objects.get(job_name=request.POST['job_selected'])
+        server_selected = Server.objects.get(server_name=request.POST['server_selected'])
+        if server_selected.server_name not in servers_dict:
+            servers_dict[server_selected.server_name] = instantiate_server(server_selected)
+        job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_selected)        
+        for process in job_running.process_set.all():
+            kill_process(process, servers_dict[server_selected.server_name])
+        count = 0
+        time.sleep(1)
+        for process in job_running.process_set.all():
+            count = count + 1 if update_process_live(process, servers_dict[server_selected.server_name]) else count
+        job_running.process_living = count
+        if count == 0:
+            job_running.status = "Stopped"
+        job_running.save()
+        count_result_files(job_selected, job_running, servers_dict[server_selected.server_name])
+        ret = {'result_num': job_running.result_nums, 'process_live': job_running.process_living, 'job_status': job_running.status}
     return JsonResponse(ret)
 
 
@@ -117,11 +126,8 @@ def run(request):
                         context['message'] = message
                         if JobRunningOnServer.objects.filter(job=job_selected, server=server_model).exists():
                             job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_model)
-<<<<<<< HEAD
-=======
                             job_running.cores_used += cores_used
                             job_running.save()
->>>>>>> b28f02612b3550e4eb9be894edbaa37eee8aa102
                         else:
                             job_running = JobRunningOnServer.objects.create(server=server_model,
                                                                             job=job_selected, cores_used=cores_used,

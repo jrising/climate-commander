@@ -166,12 +166,14 @@ function calculate_cpus_avail(util_list, server_element){
 }
 
 $(".stop_job").click(function(){
-    job_name = $(this).parents('h3').text();
+    job_name = $(this).parents('table').prev('h3').text();
+    server_name = $(this).parent().siblings('td:first').text();
     $.ajax({
         type: "POST",
         url: "/stop_job/",
         data:{
-            job_name: job_name
+            job_selected: job_name,
+	    server_selected: server_name
         },
         success: function(ret){
 

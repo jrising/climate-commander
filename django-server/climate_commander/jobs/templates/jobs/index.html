@@ -10,7 +10,7 @@
 {% block content %}
 {% for job in jobs %}
 <div class="table-responsive">
-<h3 class="sub-header">{{ job.job_name }} <span style="float:right"><input class="btn btn-primary stop_job" value="Stop Job"></span></h3>
+<h3 class="sub-header">{{ job.job_name }}</h3>
 <table class="table table-striped">
   <thead>
     <tr>
@@ -20,6 +20,7 @@
       <th># of Processes Running</th>
       <th>Total Processes</th>
       <th>Job Status</th>
+      <th>Action</th>
     </tr>
   </thead>
   <tbody>
@@ -27,9 +28,9 @@
     <tr>
       <td>{{ job_running.server.server_name }}</td>
       <td>{{ job.result_file }}</td>
-      <td>{{ job_running.result_nums}}</td>
+      <td class="res-count">{{ job_running.result_nums}}</td>
       <td class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+        <a class="dropdown-toggle pro-count" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
             {{ job_running.process_living }}<span class="caret"></span></a>
         <ul class="dropdown-menu" style="min-width:270px;padding:5px 5px">
         {% for process in job_running.process_set.all %}
@@ -40,7 +41,11 @@
         </ul>
       </td>
       <td>{{ job_running.cores_used }}</td>
-      <td>{{ job_running.status }}</td>
+      <td class="status">{{ job_running.status }}</td>
+      <td><button class="btn btn-primary stop_job" style="margin:0px 3px;padding:3px 6px">Stop</button>
+	  <button class="btn btn-primary get_data" style="margin:0px 3px;padding:3px 6px"
+		  {% if job_running.server.server_name == 'Shackleton' %} disabled {% endif %}>Get Data</button>
+          </td>
     </tr>
     {% endfor %}
   </tbody>
