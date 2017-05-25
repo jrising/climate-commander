@@ -20,7 +20,31 @@ $(document).ready(function(){
             e.preventDefault();
         }
     });
+
+    // After the document is ready, create a jstree instance.
+    $('#jstree_div').jstree({
+        // Using "checkbox" plugin
+        "plugins": ["checkbox"],
+        'core': {
+            'data': {
+                'url': '/populate_tree/',
+                'data': function (node) {
+                    path = $('#jstree_div').jstree().get_path(node);
+                    if (path) {
+                        path = path.join("/")
+                        // console.log(path);
+                    }
+                    return {
+                        'path': path
+                    };
+                }   
+            }
+        }
+    }); 
 });
+
+// *** Use below to get selected paths from jstree
+// $("#jstree_div").jstree().get_path($("#jstree_div").jstree().get_selected('full')[9])
 
 $("#job_selected").change(function(){
     job_selected = $("select option:selected").text();

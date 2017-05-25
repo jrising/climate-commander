@@ -5,10 +5,14 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import JobCreateForm, JobRunForm
 from .models import Job, Dataset, Server, Process, JobRunningOnServer
-from .server_command import instantiate_server, update_cpu_util, prepare_server, update_process_live, count_result_files, run_job, kill_process
+from .server_command import (instantiate_server, update_cpu_util, prepare_server,
+                             update_process_live, count_result_files, run_job,
+                             kill_process, tree_bfs)
 import subprocess, os, time
 
 # Store instantiated servers as values under their 'server_name' as keys.
+DATA_ROOT = "/shares/gcp/climate"
+# DATA_ROOT = "/shares/gcp/climate"
 servers_dict = {}
 
 
@@ -65,7 +69,7 @@ def stop_job(request):
         server_selected = Server.objects.get(server_name=request.POST['server_selected'])
         if server_selected.server_name not in servers_dict:
             servers_dict[server_selected.server_name] = instantiate_server(server_selected)
-        job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_selected)        
+        job_running = JobRunningOnServer.objects.get(job=job_selected, server=server_selected)
         for process in job_running.process_set.all():
             kill_process(process, servers_dict[server_selected.server_name])
         count = 0
@@ -82,7 +86,6 @@ def stop_job(request):
 
 
 def create(request):
-    dataset = Dataset.objects.all()
     if request.method == 'POST':
         form = JobCreateForm(request.POST)
         if form.is_valid():
@@ -96,7 +99,18 @@ def create(request):
         else:
             return render(request, 'jobs/create.html', {'error_message': form.errors, 'dataset': dataset})
     else:
-        return render(request, 'jobs/create.html', {'dataset': dataset})
+        dataset = Dataset.objects.all()
+        data_tree = tree_bfs(DATA_ROOT, root=True)
+        return render(request, 'jobs/create.html', {'dataset': dataset, 'data_tree': data_tree})
+
+
+def populate_tree(request):
+    path = request.GET['path']
+    if path == 'NaN' or path == "false":
+        txt = tree_bfs(DATA_ROOT, root=True)
+    else:
+        txt = tree_bfs(path, root=False)
+    return HttpResponse(txt)
 
 
 def run(request):

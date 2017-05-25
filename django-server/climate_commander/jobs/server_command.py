@@ -1,5 +1,5 @@
 from computer import login_server, osdc_server
-import time
+import time, os
 
 
 def instantiate_server(server_model, debug=False):
@@ -181,3 +181,15 @@ def update_process_live(process, server):
 def kill_process(process, server):
     server.run_command("kill " + str(process.pid))
 
+
+def tree_bfs(target_dir, root=False):
+    if root:
+        prefix = "<ul><li class='jstree-open'>" + target_dir + "<ul>"
+        suffix = "</ul></li></ul>"
+    else:
+        prefix = "<ul><li class='jstree-closed'>"
+        suffix = "</li></ul>"
+    subfolders = next(os.walk(target_dir))[1]
+    if subfolders:
+        return prefix + "</li><li class='jstree-closed'>".join(subfolders) + suffix
+    return ""

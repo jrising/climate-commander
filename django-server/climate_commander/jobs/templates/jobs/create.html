@@ -1,14 +1,23 @@
 {% extends "jobs/base.html" %}
-{% block title %}Create Job{% endblock %}
+
+{% block title %}
+Create Job
+{% endblock %}
+
 {% block sidebar %}
 <li><a href="/">Overview</a></li>
 <li class="active"><a href="/create">Create Job<span class="sr-only">(current)</span></a></li>
 <li><a href="/run">Run Job</a></li>
 {% endblock %}
-{% block content %}
 
-{% if error_message %}<h3>Job Creation Failed!</h3>
-{{error_message}}{% endif %}
+{% block content %}
+{% load staticfiles %}
+<link href="{% static 'jobs/css/jstree-style.min.css' %}" rel="stylesheet">
+
+{% if error_message %}
+<h3>Job Creation Failed!</h3>
+{{error_message}}
+{% endif %}
 
 <form action="" method="post">
     {% csrf_token %}
@@ -28,6 +37,19 @@
         {% endfor %}
         </select>
     </div>
+    <div class="form-group" id="jstree_div">
+        <!--<ul>
+            <li>Root node 1
+                <ul>
+                    <li>Child node 1</li>
+                    <li>Child node 2</li>
+                </ul>
+            </li>
+        </ul>-->
+    {% autoescape off %}
+        {{data_tree}}
+    {% endautoescape %}
+    </div>
     <div class="form-group">
         <label for="result_file">Name of Result File (ex: pvals.yml)</label>
         <input id="result_file" class="form-control" type="text" name="result_file" value="{{ result_file }}" required="True">
@@ -42,4 +64,9 @@
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+{% endblock %}
+
+{% block js %}
+{% load staticfiles %}
+<script src="{% static 'jobs/js/jstree.min.js' %}"></script>
 {% endblock %}
