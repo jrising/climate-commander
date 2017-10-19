@@ -21,9 +21,9 @@ class Server(models.Model):
     data_hosted = models.ManyToManyField(Dataset)
     roots_data = models.CharField(max_length=50)
     roots_src = models.CharField(max_length=50)
-    crdntl_user = models.CharField(max_length=50)
-    crdntl_domain = models.CharField(max_length=50)
-    crdntl_password = models.CharField(max_length=20)
+    crdntl_user = models.CharField(max_length=50, null=True)
+    crdntl_domain = models.CharField(max_length=50, null=True)
+    crdntl_password = models.CharField(max_length=20, null=True)
 
     def __unicode__(self):
         return self.server_name
@@ -36,8 +36,8 @@ class Job(models.Model):
     command = models.TextField()
     result_file = models.CharField(max_length=200)
     result_directory = models.CharField(max_length=200)
-    create_time = models.DateTimeField('Time Created')
-    start_time = models.DateTimeField('Time When the Job Starts', null=True)
+    create_time = models.DateTimeField('Time created')
+    start_time = models.DateTimeField('Time when the job started', null=True)
     running = models.BooleanField()
     server_running = models.ManyToManyField(Server, through="JobRunningOnServer")
 
@@ -48,7 +48,7 @@ class Job(models.Model):
 class JobRunningOnServer(models.Model):
     server = models.ForeignKey(Server, on_delete=models.CASCADE)
     job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    start_time = models.DateTimeField('Time When the Job Starts')
+    start_time = models.DateTimeField('Time when the job started')
     result_nums = models.IntegerField(null=True)
     cores_used = models.IntegerField(null=True)
     process_living = models.IntegerField(null=True)

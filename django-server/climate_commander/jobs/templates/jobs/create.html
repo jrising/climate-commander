@@ -13,9 +13,17 @@
 <form action="" method="post">
     {% csrf_token %}
     <div class="form-group">
-        <label for="job_name">Job Name</label>
-        <input id="job_name" class="form-control" type="text" name="job_name" value="{{ job_name }}" required="True">
+      <label for="job_name">Job Name</label>
+      <input id="job_name" class="form-control" type="text" name="job_name" value="{{ job_name }}" required="True">
     </div>
+    <!--<div class="form-group">
+      <label for="job_config">Job Config</label>
+      <select id="job_config" class="form-control" name="job_config" required="True">
+	{% for config in configs %}
+	<potion value="{{ config }}">{{ config }}</option>
+        {% endfor %}
+      </select>
+    </div>-->
     <div class="form-group">
         <label for="code_url">Code URL (Only use GitHub repository and include the 'https' part)</label>
         <input id="code_url" class="form-control" type="url" name="code_url" value="{{ code_url }}" required="True">
@@ -29,7 +37,7 @@
         </select>
     </div>
     <div class="form-group">
-        <label for="result_file">Name of Result File (ex: pvals.yml)</label>
+        <label for="result_file">Name of Tracking File (ex: pvals.yml)</label>
         <input id="result_file" class="form-control" type="text" name="result_file" value="{{ result_file }}" required="True">
     </div>
     <div class="form-group">

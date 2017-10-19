@@ -11,7 +11,7 @@ from .models import Job, Server
 class JobCreateForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = ['job_name', 'data_used', 'code_url', 'command', 'result_file', 'result_directory']
+        fields = ['job_name', 'code_url', 'data_used', 'result_file', 'result_directory', 'command']
 
 
 class JobRunForm(forms.Form):

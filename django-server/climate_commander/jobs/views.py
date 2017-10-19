@@ -48,9 +48,9 @@ def create(request):
         if form.is_valid():
             job_instance = form.save(commit=False)
             job_instance.create_time = timezone.now()
+            job_instance.running = False
             job_instance.save()
             form.save_m2m()
-            print(str(form.cleaned_data['data_used']))
             return HttpResponseRedirect(reverse('jobs:run'))
         else:
             return render(request, 'jobs/create.html', {'error_message': form.errors, 'dataset': dataset})
@@ -77,10 +77,11 @@ def run(request):
                     server = prepare_server(server_model, servers_dict, job_selected)
                     job_running = JobRunningOnServer.objects.create(server=server_model, job=job_selected, cores_used=cores_used, start_time = timezone.now(), status='Running')
                     for i in range(cores_used):
-                        pid, log_file = str(server.start_process(job_selected.command)).split(',')[2:]
-                        process = Process(job_spawning=job_running, start_time=timezone.now(), pid=int(pid), log_file=log_file, status="Running")
+                        proc = server.start_process(job_selected.command)
+                        process = Process(job_spawning=job_running, start_time=timezone.now(), pid=int(proc.pid), log_file=proc.logfile, status="Running")
                         process.save()
-            return HttpResponseRedirect(reverse('jobs:dashboard'))
+            job_selected.save()
+            return HttpResponseRedirect(reverse('dashboard'))
         else:
             context['error_message'] = runForm.errors
             return render(request, 'jobs/run.html', context)

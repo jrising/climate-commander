@@ -1,4 +1,4 @@
-from computer import login_server
+from computer import login_server, local_server
 
 
 def instantiate_server(server_model):
@@ -8,9 +8,13 @@ def instantiate_server(server_model):
     utup = (server_model.server_name, server_model.server_location)
     cpus = server_model.server_cpus
     roots = {'data': server_model.roots_data, 'src': server_model.roots_src}
-    credentials = {'username': server_model.crdntl_user, 'domain': server_model.crdntl_domain, 'password': server_model.crdntl_password}
-    server = login_server.LoginServer(utup, cpus, roots, credentials)
-    server.connect()
+
+    if server_model.server_location == 'localhost':
+        server = local_server.LocalServer(utup, cpus, roots)
+    else:
+        credentials = {'username': server_model.crdntl_user, 'domain': server_model.crdntl_domain, 'password': server_model.crdntl_password}
+        server = login_server.LoginServer(utup, cpus, roots, credentials)
+        server.connect()
     return server
 
 
@@ -35,9 +39,12 @@ def calculate_cpu_util(prev_time, post_time):
     for i in range(len(prev_time)):
         prev_sum = sum([int(x) for x in prev_time[i].split()[1:]])
         post_sum = sum([int(x) for x in post_time[i].split()[1:]])
-        prev_busy = prev_sum - int(prev_time[i].split()[4]) - int(prev_time[i].split()[5])
-        post_busy = post_sum - int(post_time[i].split()[4]) - int(post_time[i].split()[5])
-        ret.append(float(post_busy - prev_busy)/(post_sum - prev_sum)*100)
+        try:
+            prev_busy = prev_sum - int(prev_time[i].split()[4]) - int(prev_time[i].split()[5])
+            post_busy = post_sum - int(post_time[i].split()[4]) - int(post_time[i].split()[5])
+            ret.append(float(post_busy - prev_busy)/(post_sum - prev_sum)*100)
+        except:
+            ret.append(0)
     return ret
 
 

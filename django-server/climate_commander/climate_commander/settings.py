@@ -25,7 +25,7 @@ SECRET_KEY = 'kj&jjsrty8@s)(x31!xbdez0evizj(1dvd$w49ppj-@z-+vqpj'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['dev-cilic.berkeley.edu', 'cilic.berkeley.edu', '127.0.0.1']
 
 
 # Application definition
