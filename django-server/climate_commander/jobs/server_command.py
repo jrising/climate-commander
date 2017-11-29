@@ -1,10 +1,14 @@
 import os
 from computer import login_server, local_server
+from computer.services import osdc_server
+import time, os
 
-def instantiate_server(server_model):
+def instantiate_server(server_model, debug=False):
     '''
     Convert a server representation in database into a connected computer.login_server.LoginServer.
     '''
+    if debug:
+        return
     utup = (server_model.server_name, server_model.server_location)
     cpus = server_model.server_cpus
     roots = {'data': server_model.roots_data, 'src': server_model.roots_src}
@@ -12,9 +16,22 @@ def instantiate_server(server_model):
     if server_model.server_location == 'localhost':
         server = local_server.LocalServer(utup, cpus, roots)
     else:
-        credentials = {'username': server_model.crdntl_user, 'domain': server_model.crdntl_domain, 'password': server_model.crdntl_password}
-        server = login_server.LoginServer(utup, cpus, roots, credentials)
+        credentials = {'userName': server_model.crdntl_user,
+                       'domain': server_model.crdntl_domain,
+                       'password': server_model.crdntl_password,
+                       'loginNode': server_model.crdntl_loginnode,
+                       'instanceIP': server_model.crdntl_instanceip,
+                       'instanceName': server_model.crdntl_instanceName,
+                       'pem': server_model.crdntl_pem}
+        if server_model.server_name == 'Shackleton':
+            server = login_server.LoginServer(utup, cpus, roots, credentials)
+        elif server_model.server_name == 'Griffin':
+            server = osdc_server.OSDCServer(utup, cpus, roots, credentials)
         server.connect()
+        print(server.session)
+            
+    print('go', server.utup[0])
+
     return server
 
 
@@ -23,6 +40,7 @@ def update_cpu_util(server_model, servers_dict):
     server_model.cpu_time = get_cpu_time(servers_dict[server_model.server_name])
     server_model.save()
     post_time = server_model.cpu_time
+    print(post_time)
     return calculate_cpu_util(prev_time, post_time)
 
 
@@ -55,33 +73,50 @@ def prepare_server(server_model, servers_dict, job_model):
     roots_src = server_model.roots_src
     if not server.check_connection():
         server.connect()
-    update_codebase(server, code_url, roots_src)
+    # return (server, "") # message)
+
+    message = update_codebase(server_model, server, code_url, roots_src)
     data_missed = check_data(server_model, job_model)
     copy_data(server, data_missed)
     invoke_virtualenv(server_model.server_name, server)
-    return server
+    return (server, message)
 
 
-def update_codebase(server, code_url, roots_src):
+def update_codebase(server_model, server, code_url, roots_src):
     print "Update..."
     codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
     if os.path.exists(roots_src + "/" + codebase):
         server.cwd(roots_src + "/" + codebase)
-        stdout, stderr = server.run_command("git pull")
-        print(stdout, stderr)
+
+        message = codebase + "\n"
+
+        if server_model.server_name == 'Shackleton':
+            stdout, stderr = server.run_command("git pull")
+            message += stdout +  stderr + "\n"
+        elif server_model.server_name == 'Griffin':
+            stdout, stderr = server.run_command("with_proxy git pull")
+            message += stdout +  stderr + "\n"
+
         if stderr:
             raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
         if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
             clean_codebase(server, codebase, roots_src)
-            clone_codebase(server, code_url, roots_src)
+            clone_codebase(server_model, server, code_url, roots_src)
             server.cwd(roots_src + "/" + codebase)
+
+        return message
     else:
-        clone_codebase(server, code_url, roots_src)
+        clone_codebase(server_model, server, code_url, roots_src)
         server.cwd(roots_src + "/" + codebase)
 
-def clone_codebase(server, code_url, roots_src):
+def clone_codebase(server_model, server, code_url, roots_src):
     server.cwd(roots_src)
-    stdout, stderr = server.run_command("git clone " + code_url)
+    if server_model.server_name == 'Shackleton':
+        stdout, stderr = server.run_command("git clone " + code_url)
+    elif server_model.server_name == 'Griffin':
+        stdout, stderr = server.run_command("with_proxy git clone " + code_url)
+
+    # stdout, stderr = server.run_command("git clone " + code_url)
     if stderr:
         raise SystemExit("Cannot clone %s:\n %s" % (code_url, stderr))
     print(stdout)
@@ -98,6 +133,21 @@ def clean_codebase(server, codebase, roots_src):
     if stderr:
         raise SystemExit("Cannot remove %s:\n %s" % (codebase, stderr))
     print('removed directory: %s' % codebase)
+
+
+def run_job(server_model, server, job_model, cores_used):
+    code_url = job_model.code_url
+    codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
+    roots_src = server_model.roots_src
+    pid_list = []
+    for i in range(cores_used):
+        if not server.check_connection():
+            server.connect()
+        server.cwd(roots_src + "/" + codebase)
+        pid, log_file = str(server.start_process(job_model.command)).split(',')[2:]
+        pid_list.append((pid, log_file))
+        time.sleep(5)
+    return pid_list
 
 
 def check_data(server_model, job_model):
@@ -119,15 +169,18 @@ def invoke_virtualenv(server_name, server):
         server.run_command("source /home/jrising/aggregator/env/bin/activate")
 
 
-def count_result_files(job_model, server_model, server):
+def count_result_files(job_model, job_running, server):
     result_file = job_model.result_file
     if not result_file:
         return ''
     result_directory = job_model.result_directory
-    count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n')) - 1
-    server_model.result_nums = count
-    print(server_model.result_nums)
-    server_model.save()
+
+    count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n'))
+    print(count)
+    job_running.result_nums = count
+    print(job_running.result_nums)
+    job_running.save()
+
     return count
 
 
@@ -144,11 +197,18 @@ def update_process_live(process, server):
         return True
 
 
+def kill_process(process, server):
+    server.run_command("kill " + str(process.pid))
 
 
-
-
-# def run_job(server, job_selected, job_running, cores_used):
-#     for i in range(cores_used):
-#         server.start_process(job_selected.command)
-#     return
+def tree_bfs(target_dir, root=False):
+    if root:
+        prefix = "<ul><li class='jstree-open'>" + target_dir + "<ul>"
+        suffix = "</ul></li></ul>"
+    else:
+        prefix = "<ul><li class='jstree-closed'>"
+        suffix = "</li></ul>"
+    subfolders = next(os.walk(target_dir))[1]
+    if subfolders:
+        return prefix + "</li><li class='jstree-closed'>".join(subfolders) + suffix
+    return ""
