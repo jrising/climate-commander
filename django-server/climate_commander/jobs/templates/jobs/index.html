@@ -5,6 +5,9 @@
 <li><a href="/create">Create Job</a></li>
 <li><a href="/run">Run Job</a></li>
 {% endblock %}
+{% block js %}
+<script src="/static/jobs/js/dashboard.js"></script>
+{% endblock %}
 
 {% block content %}
 {% for job in jobs %}
@@ -16,30 +19,30 @@
       <th>Server</th>
       <th>Result Files</th>
       <th>Result Generated</th>
-      <th># of Processes Running</th>
-      <th>Total Processes</th>
-      <th>Job Status</th>
+      <th>Processes Run</th>
+      <th>Current Live</th>
+      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
-    {% for server in job.jobrunningonserver_set.all %}
+    {% for jobrun in job.jobrunningonserver_set.all %}
     <tr>
-      <td>{{ server.server.server_name }}</td>
+      <td>{{ jobrun.server.server_name }}</td>
       <td>{{ job.result_file }}</td>
-      <td>{{ server.result_nums}}</td>
+      <td>{{ jobrun.result_nums}}</td>
       <td class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-            {{ server.process_living }}<span class="caret"></span></a>
+            {{ jobrun.cores_used }}<span class="caret"></span></a>
         <ul class="dropdown-menu" style="min-width:270px;padding:5px 5px">
-        {% for process in server.process_set.all %}
+        {% for process in jobrun.process_set.all %}
           <li>
               <span> {{ process.pid }}  </span><span>  {{ process.status }} </span><span>   {{ process.log_file}} </span>
           </li>
         {% endfor %}
         </ul>
       </td>
-      <td>{{ server.cores_used }}</td>
-      <td>{{ server.status }}</td>
+      <td>{{ jobrun.process_living }} / {{ jobrun.cores_used }}</td>
+      <td><a class="delete_jobrun" href="#" data="{{ jobrun.id }}">Delete</a></td>
     </tr>
     {% endfor %}
   </tbody>

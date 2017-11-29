@@ -1,5 +1,5 @@
+import os
 from computer import login_server, local_server
-
 
 def instantiate_server(server_model):
     '''
@@ -49,6 +49,7 @@ def calculate_cpu_util(prev_time, post_time):
 
 
 def prepare_server(server_model, servers_dict, job_model):
+    print "Prepare..."
     server = servers_dict[server_model.server_name]
     code_url = job_model.code_url
     roots_src = server_model.roots_src
@@ -62,17 +63,21 @@ def prepare_server(server_model, servers_dict, job_model):
 
 
 def update_codebase(server, code_url, roots_src):
+    print "Update..."
     codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
-    server.cwd(roots_src + "/" + codebase)
-    stdout, stderr = server.run_command("git pull")
-    print(stdout, stderr)
-    if stderr:
-        raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
-    if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
-        clean_codebase(server, codebase, roots_src)
+    if os.path.exists(roots_src + "/" + codebase):
+        server.cwd(roots_src + "/" + codebase)
+        stdout, stderr = server.run_command("git pull")
+        print(stdout, stderr)
+        if stderr:
+            raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
+        if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
+            clean_codebase(server, codebase, roots_src)
+            clone_codebase(server, code_url, roots_src)
+            server.cwd(roots_src + "/" + codebase)
+    else:
         clone_codebase(server, code_url, roots_src)
         server.cwd(roots_src + "/" + codebase)
-
 
 def clone_codebase(server, code_url, roots_src):
     server.cwd(roots_src)
@@ -116,9 +121,10 @@ def invoke_virtualenv(server_name, server):
 
 def count_result_files(job_model, server_model, server):
     result_file = job_model.result_file
+    if not result_file:
+        return ''
     result_directory = job_model.result_directory
-    count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n'))
-    print(count)
+    count = len(server.run_command("find " + result_directory + " -type f -name " + result_file)[0].split('\n')) - 1
     server_model.result_nums = count
     print(server_model.result_nums)
     server_model.save()
@@ -128,7 +134,7 @@ def count_result_files(job_model, server_model, server):
 def update_process_live(process, server):
     lines = server.run_command("ps -l %d; echo $?" % (process.pid))
     print(lines)
-    if len(lines[0].split('\n')) < 3:
+    if len(lines[0].split('\n')) < 4:
         process.status = 'Stopped'
         process.save()
         return False
