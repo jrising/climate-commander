@@ -16,7 +16,7 @@ class Dataset(models.Model):
 class Server(models.Model):
     server_name = models.CharField(max_length=20)
     server_location = models.CharField(max_length=20)
-    server_cpus = models.IntegerField()
+    server_cpus = models.IntegerField(null=True)
     cpu_time = models.CharField(max_length=6000)
     data_hosted = models.ManyToManyField(Dataset)
     roots_data = models.CharField(max_length=50)
@@ -24,6 +24,10 @@ class Server(models.Model):
     crdntl_user = models.CharField(max_length=50, null=True)
     crdntl_domain = models.CharField(max_length=50, null=True)
     crdntl_password = models.CharField(max_length=20, null=True)
+    crdntl_loginnode = models.CharField(max_length=40, null=True)
+    crdntl_instanceip = models.GenericIPAddressField(null=True)
+    crdntl_instanceName = models.CharField(max_length=50, null=True)
+    crdntl_pem = models.CharField(max_length=100, null=True)
 
     def __unicode__(self):
         return self.server_name
@@ -38,7 +42,7 @@ class Job(models.Model):
     result_directory = models.CharField(max_length=200)
     create_time = models.DateTimeField('Time created')
     start_time = models.DateTimeField('Time when the job started', null=True)
-    running = models.BooleanField()
+    running = models.NullBooleanField()
     server_running = models.ManyToManyField(Server, through="JobRunningOnServer")
 
     def __unicode__(self):

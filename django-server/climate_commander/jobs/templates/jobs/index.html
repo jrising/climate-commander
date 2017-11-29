@@ -1,5 +1,6 @@
 {% extends "jobs/base.html" %}
 {% block title %}Overview{% endblock %}
+{% block message %}{{message}}{% endblock %}
 {% block sidebar %}
 <li class="active"><a href="/">Overview of Jobs Running <span class="sr-only">(current)</span></a></li>
 <li><a href="/create">Create Job</a></li>
@@ -12,7 +13,7 @@
 {% block content %}
 {% for job in jobs %}
 <div class="table-responsive">
-<h3 class="sub-header">{{ job.job_name }} <span style="float:right"><input class="btn btn-primary stop_job" value="Stop Job"></span></h3>
+<h3 class="sub-header">{{ job.job_name }}</h3>
 <table class="table table-striped">
   <thead>
     <tr>
@@ -31,8 +32,8 @@
       <td>{{ job.result_file }}</td>
       <td>{{ jobrun.result_nums}}</td>
       <td class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-            {{ jobrun.cores_used }}<span class="caret"></span></a>
+        <a class="dropdown-toggle pro-count" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            {{ jobrun.process_living }}<span class="caret"></span></a>
         <ul class="dropdown-menu" style="min-width:270px;padding:5px 5px">
         {% for process in jobrun.process_set.all %}
           <li>
@@ -42,7 +43,13 @@
         </ul>
       </td>
       <td>{{ jobrun.process_living }} / {{ jobrun.cores_used }}</td>
-      <td><a class="delete_jobrun" href="#" data="{{ jobrun.id }}">Delete</a></td>
+      <td class="status">{{ job_running.status }}</td>
+      <td>
+	<a class="delete_jobrun" href="#" data="{{ jobrun.id }}">Delete</a>
+	<button class="btn btn-primary stop_job" style="margin:0px 3px;padding:3px 6px">Stop</button>
+	<button class="btn btn-primary get_data" style="margin:0px 3px;padding:3px 6px"
+		{% if job_running.server.server_name == 'Shackleton' %} disabled {% endif %}>Get Data</button>
+      </td>
     </tr>
     {% endfor %}
   </tbody>

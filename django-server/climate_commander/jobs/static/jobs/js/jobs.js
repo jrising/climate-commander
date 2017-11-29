@@ -20,7 +20,31 @@ $(document).ready(function(){
             e.preventDefault();
         }
     });
+
+    // After the document is ready, create a jstree instance.
+    $('#jstree_div').jstree({
+        // Using "checkbox" plugin
+        "plugins": ["checkbox"],
+        'core': {
+            'data': {
+                'url': '/populate_tree/',
+                'data': function (node) {
+                    path = $('#jstree_div').jstree().get_path(node);
+                    if (path) {
+                        path = path.join("/")
+                        // console.log(path);
+                    }
+                    return {
+                        'path': path
+                    };
+                }   
+            }
+        }
+    }); 
 });
+
+// *** Use below to get selected paths from jstree
+// $("#jstree_div").jstree().get_path($("#jstree_div").jstree().get_selected('full')[9])
 
 $("#job_selected").change(function(){
     job_selected = $("select option:selected").text();
@@ -121,7 +145,7 @@ var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10, "%");
 // var svgs = [];
 $(".server").each(function(){
     server = $(this).find("h4").text().split(",")[0];
-    var svg = d3.select(".chartHolder").append("svg")
+    var svg = d3.select(this).selectAll(".chartHolder").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -164,3 +188,19 @@ function calculate_cpus_avail(util_list, server_element){
     util_list.map(function(x){if(x <= 10)num++;});
     server_element.find(".cpus_avail").html(num);
 }
+
+$(".stop_job").click(function(){
+    job_name = $(this).parents('table').prev('h3').text();
+    server_name = $(this).parent().siblings('td:first').text();
+    $.ajax({
+        type: "POST",
+        url: "/stop_job/",
+        data:{
+            job_selected: job_name,
+	    server_selected: server_name
+        },
+        success: function(ret){
+
+        }
+    });
+});
