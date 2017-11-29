@@ -30,7 +30,7 @@ def dashboard(request):
                 count = count + 1 if update_process_live(process, servers_dict[jobrun.server.server_name]) else count
             jobrun.process_living = count
             if count == 0:
-                job_running.status = "Stopped"
+                jobrun.status = "Stopped"
             jobrun.save()
     return render(request, 'jobs/index.html', context)
 

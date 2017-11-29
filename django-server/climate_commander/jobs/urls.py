@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.views.generic.base import RedirectView
 from . import views
 
 app_name = 'jobs'
@@ -14,5 +15,6 @@ urlpatterns = [
     url(r'^command$', views.command, name='command'),
     # url(r'^edit/$', views.edit, name='edit'),
     url(r'^save_results/$', views.save_results, name="save_results"),
-    url(r'^populate_tree/$', views.populate_tree, name='populate_tree')
+    url(r'^populate_tree/$', views.populate_tree, name='populate_tree'),
+    url(r'^accounts/login/$', RedirectView.as_view(url='/admin/login', permanent=False))
 ]

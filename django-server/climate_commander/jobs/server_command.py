@@ -1,5 +1,6 @@
 import os
-from computer import login_server, local_server, osdc_server
+from computer import login_server, local_server
+from computer.services import osdc_server
 import time, os
 
 def instantiate_server(server_model, debug=False):
@@ -27,9 +28,9 @@ def instantiate_server(server_model, debug=False):
         elif server_model.server_name == 'Griffin':
             server = osdc_server.OSDCServer(utup, cpus, roots, credentials)
         server.connect()
+        print(server.session)
             
     print('go', server.utup[0])
-    print(server.session)
 
     return server
 
@@ -81,7 +82,7 @@ def prepare_server(server_model, servers_dict, job_model):
     return (server, message)
 
 
-def update_codebase(server, server, code_url, roots_src):
+def update_codebase(server_model, server, code_url, roots_src):
     print "Update..."
     codebase = code_url.split("/")[-1].rstrip(".git") if code_url[-1] != '/' else code_url.split("/")[-2].rstrip(".git")
     if os.path.exists(roots_src + "/" + codebase):
@@ -89,10 +90,10 @@ def update_codebase(server, server, code_url, roots_src):
 
         message = codebase + "\n"
 
-        if server.server_name == 'Shackleton':
+        if server_model.server_name == 'Shackleton':
             stdout, stderr = server.run_command("git pull")
             message += stdout +  stderr + "\n"
-        elif server.server_name == 'Griffin':
+        elif server_model.server_name == 'Griffin':
             stdout, stderr = server.run_command("with_proxy git pull")
             message += stdout +  stderr + "\n"
 
@@ -100,19 +101,19 @@ def update_codebase(server, server, code_url, roots_src):
             raise SystemExit("Cannot update %s by git pull: \n %s" % (code_url, stderr))
         if 'failed' in stdout or 'error' in stdout or 'unmerged' in stdout or 'fatal' in stdout:
             clean_codebase(server, codebase, roots_src)
-            clone_codebase(server, server, code_url, roots_src)
+            clone_codebase(server_model, server, code_url, roots_src)
             server.cwd(roots_src + "/" + codebase)
 
         return message
     else:
-        clone_codebase(server, code_url, roots_src)
+        clone_codebase(server_model, server, code_url, roots_src)
         server.cwd(roots_src + "/" + codebase)
 
-def clone_codebase(server, server, code_url, roots_src):
+def clone_codebase(server_model, server, code_url, roots_src):
     server.cwd(roots_src)
-    if server.server_name == 'Shackleton':
+    if server_model.server_name == 'Shackleton':
         stdout, stderr = server.run_command("git clone " + code_url)
-    elif server.server_name == 'Griffin':
+    elif server_model.server_name == 'Griffin':
         stdout, stderr = server.run_command("with_proxy git clone " + code_url)
 
     # stdout, stderr = server.run_command("git clone " + code_url)
